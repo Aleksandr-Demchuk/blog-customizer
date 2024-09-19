@@ -1,6 +1,7 @@
 import { ArrowButton } from 'components/arrow-button';
 import { Button } from 'components/button';
 import { Text } from 'components/text';
+
 import { Separator } from '../separator';
 import { useState, useEffect } from 'react';
 import clsx from 'clsx';
@@ -32,7 +33,7 @@ export const ArticleParamsForm = () => {
 	});
 	return (
 		<>
-			<ArrowButton form={form} openForm={openForm} />
+			<ArrowButton form={form} onClick={openForm} />
 			<aside
 				className={clsx(styles.container, { [styles.container_open]: form })}>
 				<form className={styles.form}>
