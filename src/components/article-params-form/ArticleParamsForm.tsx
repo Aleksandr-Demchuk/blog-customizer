@@ -19,39 +19,59 @@ import {
 
 import styles from './ArticleParamsForm.module.scss';
 
+type TUseClose = {
+	form: boolean;
+	onClose: () => void;
+	rootRef: React.RefObject<HTMLElement>;
+};
+
+export function useClose({ form, onClose, rootRef }: TUseClose) {
+	useEffect(() => {
+		if (!form) return;
+
+		function handleClickOutside(event: MouseEvent) {
+			const { target } = event;
+			const isOutsideClick =
+				target instanceof Node &&
+				rootRef.current &&
+				!rootRef.current.contains(target);
+			if (isOutsideClick) {
+				onClose();
+			}
+		}
+
+		const handleEscape = (e: KeyboardEvent) => {
+			if (e.key === 'Escape') {
+				onClose();
+			}
+		};
+
+		document.addEventListener('keydown', handleEscape);
+		document.addEventListener('mousedown', handleClickOutside);
+
+		return () => {
+			document.removeEventListener('keydown', handleEscape);
+			document.removeEventListener('mousedown', handleClickOutside);
+		};
+	}, [form, onClose, rootRef]);
+}
+
 type ArticleParamsFormProps = {
 	defaultArticle: ArticleStateType;
 	setDefaultArticle: (date: ArticleStateType) => void;
 };
-
 export const ArticleParamsForm = ({
 	defaultArticle,
 	setDefaultArticle,
 }: ArticleParamsFormProps) => {
 	const [form, setForm] = useState(false);
 	const [state, setState] = useState(defaultArticle);
-
-	useEffect(() => {
-		function closeForm(event: KeyboardEvent) {
-			if (event.key === 'Escape') {
-				setForm(false);
-			}
-		}
-		document.addEventListener('keydown', closeForm);
-		document.addEventListener('mousedown', closeClickForm);
-
-		return () => {
-			document.removeEventListener('keydown', closeForm);
-			document.removeEventListener('mousedown', closeClickForm);
-		};
-	});
-
 	const ref = useRef<HTMLFormElement | null>(null);
-	function closeClickForm(event: MouseEvent) {
-		if (ref.current && !ref.current.contains(event.target as Node)) {
-			setForm(false);
-		}
-	}
+	useClose({
+		form,
+		onClose: () => setForm(false),
+		rootRef: ref,
+	});
 
 	function submitSidebar(event: FormEvent) {
 		event.preventDefault();
@@ -63,12 +83,8 @@ export const ArticleParamsForm = ({
 		setDefaultArticle(defaultArticleState);
 	}
 
-	function openForm() {
-		if (form === false) {
-			setForm(true);
-		} else if (form === true) {
-			setForm(false);
-		}
+	function handleToggleForm() {
+		setForm((form) => !form);
 	}
 
 	function handleFontFamilyOption(value: OptionType) {
@@ -93,7 +109,7 @@ export const ArticleParamsForm = ({
 
 	return (
 		<>
-			<ArrowButton form={form} onClick={openForm} />
+			<ArrowButton form={form} onClick={handleToggleForm} />
 			<aside
 				className={clsx(styles.container, { [styles.container_open]: form })}>
 				<form
